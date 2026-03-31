@@ -97,7 +97,7 @@ if nama:
             
             pdf.ln(20)
             pdf.set_font("Arial", 'I', 10)
-            pdf.cell(0, 10, "Copyright 2026 Hikari Salsabila Syauqi. All Rights Reserved.", ln=True, align='C')
+            pdf.cell(0, 10, "Copyright 2026 Namikor. All Rights Reserved.", ln=True, align='C')
             
             pdf_bytes = pdf.output(dest='S').encode('latin-1')
             b64 = base64.b64encode(pdf_bytes).decode()
