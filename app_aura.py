@@ -1,77 +1,89 @@
 import streamlit as st
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageStat
 import random
 import time
 
 # --- 1. KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="AuraLens Pro", page_icon="🔮")
+st.set_page_config(page_title="AuraLens Pro Real-Time", page_icon="🔮")
 
 st.markdown("""
     <style>
     .main { background-color: #0E1117; color: white; }
-    div.stButton > button:first-child { width: 100%; background-color: #4B0082; color: white; border-radius: 10px; }
+    div.stButton > button:first-child { width: 100%; background-color: #4B0082; color: white; border-radius: 10px; font-weight: bold; }
+    .stProgress > div > div > div > div { background-color: #4B0082; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🔮 AuraLens Pro")
-st.caption("“Energi Anda unik, dan aura Anda bisa berubah setiap detik.”")
+st.title("🔮 AuraLens Pro: Biometric AI")
+st.caption("“Membaca frekuensi energi Anda melalui sensor biometrik visual.”")
 
-# Database 7 Warna
+# Database 7 Warna Aura
 AURA_DB = {
-    "Merah": {"hex": "#FF0000", "desc": "Energi Berani & Semangat!", "karir": "Atlet atau Pemimpin."},
-    "Jingga": {"hex": "#FF7F00", "desc": "Energi Kreatif & Ceria!", "karir": "Seni atau Pemasaran."},
-    "Kuning": {"hex": "#FFFF00", "desc": "Energi Optimis & Cerdas!", "karir": "Guru atau Penulis."},
-    "Hijau": {"hex": "#00FF00", "desc": "Energi Harmoni!", "karir": "Dokter atau Psikolog."},
-    "Biru": {"hex": "#0000FF", "desc": "Energi Tenang!", "karir": "Diplomat atau HRD."},
-    "Nila": {"hex": "#4B0082", "desc": "Energi Intuisi!", "karir": "Peneliti atau Desainer."},
-    "Ungu": {"hex": "#800080", "desc": "Energi Inovatif!", "karir": "Artis atau Inovator."}
+    "Merah": {"hex": "#FF0000", "desc": "Energi Berani & Vitalitas.", "karir": "Pemimpin, Atlet, atau Pengusaha."},
+    "Jingga": {"hex": "#FF7F00", "desc": "Energi Kreatif & Ekspresif.", "karir": "Artis, Animator, atau Marketing."},
+    "Kuning": {"hex": "#FFFF00", "desc": "Energi Intelek & Optimis.", "karir": "Ilmuwan, Guru, atau Penulis."},
+    "Hijau": {"hex": "#00FF00", "desc": "Energi Keseimbangan & Alam.", "karir": "Dokter, Terapis, atau Arsitek."},
+    "Biru": {"hex": "#0000FF", "desc": "Energi Tenang & Otoritas.", "karir": "Diplomat, HRD, atau Hukum."},
+    "Nila": {"hex": "#4B0082", "desc": "Energi Intuisi & Spiritual.", "karir": "Psikolog, Peneliti, atau Desainer."},
+    "Ungu": {"hex": "#800080", "desc": "Energi Inovatif & Magis.", "karir": "Sutradara, Artis, atau Inovator Tech."}
 }
 
-# --- Langkah 1: Tulis Nama ---
-nama = st.text_input("1. Silahkan tulis nama kamu:", placeholder="Contoh: Mbak Ayi")
+# --- LANGKAH 1: IDENTIFIKASI NAMA ---
+nama = st.text_input("1. Masukkan Nama Pengguna:", placeholder="Contoh: Mbak Ayi")
 
 if nama:
     st.divider()
-    # --- Langkah 2: Take Foto ---
-    st.write(f"Halo *{nama}*, pancarkan energimu sekarang...")
-    foto = st.camera_input("2. Ambil foto untuk scan detik ini")
+    # --- LANGKAH 2: PENGAMBILAN DATA VISUAL ---
+    st.write(f"Selamat datang, *{nama}*. Posisikan wajah Anda di depan sensor kamera.")
+    foto = st.camera_input("2. Ambil Foto Biometrik")
 
     if foto:
-        # LOGIKA SESUAI SLOGAN: Warna dipilih acak setiap kali foto diambil
-        # Kita simpan di session_state supaya tidak berubah saat scrolling
-        if 'warna_sekarang' not in st.session_state or st.button("🔄 Rescan Aura"):
-            st.session_state.warna_sekarang = random.choice(list(AURA_DB.keys()))
-
-        warna_hasil = st.session_state.warna_sekarang
-        
-        # --- Langkah 3: Animasi Scan ---
-        with st.status("3. AI sedang membaca frekuensi energi...", expanded=False) as status:
+        # --- LANGKAH 3: SIMULASI SCAN REALISTIS ---
+        with st.status("3. Memulai Analisis Biometrik...", expanded=True) as status:
+            st.write("🔍 Mendeteksi titik koordinat wajah...")
+            progress_bar = st.progress(0)
+            for i in range(100):
+                time.sleep(0.02)
+                progress_bar.progress(i + 1)
+            
+            st.write("⚡ Menghitung frekuensi cahaya kulit...")
             time.sleep(1)
-            status.update(label=f"Terdeteksi! Aura kamu detik ini adalah {warna_hasil}.", state="complete")
+            
+            # LOGIKA REALISTIS: Menghitung warna berdasarkan kecerahan foto (Bukan Random!)
+            img = Image.open(foto)
+            stat = ImageStat.Stat(img)
+            brightness = sum(stat.mean) / 3  # Menghitung rata-rata kecerahan foto
+            
+            # Memilih warna berdasarkan level kecerahan (Logic-based)
+            warna_keys = list(AURA_DB.keys())
+            index_warna = int(brightness % len(warna_keys))
+            warna_hasil = warna_keys[index_warna]
+            
+            st.write(f"✅ Frekuensi Energi: {round(brightness, 2)} Hz")
+            status.update(label=f"Scan Berhasil! Aura {warna_hasil} Teridentifikasi.", state="complete", expanded=False)
         
-        # PROSES VISUAL
-        img = Image.open(foto)
+        # PROSES VISUALISASI HASIL
         img = ImageOps.exif_transpose(img)
         warna_hex = AURA_DB[warna_hasil]["hex"]
         rgb_color = tuple(int(warna_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
         overlay = Image.new("RGB", img.size, rgb_color)
-        hasil_img = Image.blend(img, overlay, alpha=0.3)
+        hasil_img = Image.blend(img, overlay, alpha=0.35)
         
-        # --- Langkah 4: Hasil Foto ---
+        # --- LANGKAH 4: DISPLAY HASIL ---
         st.divider()
-        st.subheader(f"4. Visualisasi Aura {warna_hasil}")
-        st.image(hasil_img, caption=f"Energi {nama} pada {time.strftime('%H:%M:%S')} WIB")
+        st.subheader(f"4. Hasil Analisis Aura: {warna_hasil}")
+        st.image(hasil_img, caption=f"Data Visual Aura {nama} - Diproses secara Biometrik")
         st.balloons()
 
-        # --- Langkah 5 & 6: Deskripsi & Karir ---
+        # --- LANGKAH 5 & 6: DESKRIPSI & SARAN ---
         col1, col2 = st.columns(2)
         with col1:
-            st.warning(f"✨ *5. Arti Aura {warna_hasil}*")
+            st.warning(f"✨ *5. Karakter Aura {warna_hasil}*")
             st.write(AURA_DB[warna_hasil]["desc"])
         with col2:
-            st.success("💼 *6. Saran Karir*")
+            st.success("💼 *6. Rekomendasi Karir*")
             st.write(AURA_DB[warna_hasil]["karir"])
             
-        st.info("💡 Ingin lihat perubahan energimu? Silakan ambil foto lagi!")
+        st.info(f"💡 *Info:* Aura Anda bersifat dinamis. Perubahan cahaya atau ekspresi saat foto diambil dapat mempengaruhi hasil pembacaan frekuensi biometrik.")
 else:
-    st.info("Masukkan nama untuk memulai scan.")
+    st.info("Sistem standby. Masukkan nama untuk mengaktifkan sensor.")
