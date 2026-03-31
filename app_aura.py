@@ -5,7 +5,7 @@ import time
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="AuraLens Pro Lifestyle AI", page_icon="🔮")
 
-# CSS untuk tampilan Premium
+# CSS untuk tampilan Premium (Menggunakan st.write dengan unsafe_allow_html agar aman dari KeyError)
 st.markdown("""
     <style>
     .main { background-color: #0E1117; color: white; }
@@ -77,7 +77,7 @@ AURA_DB = {
     "Hijau": {
         "hex": "#00FF00", "hawkins": 400, "vibrasi": "Energi Pertumbuhan (Harmoni)",
         "hobi": "Berkebun atau fotografi alam.",
-        "aktivitas": "Meditasi di taman atau berjalan tanpa alas kaki di rumput.",
+        "aktivitas": "Meditasi di taman atau earthing.",
         "tanaman": "Monstera atau Paku-pakuan.",
         "hewan": "Kura-kura atau Ikan Hias.",
         "belajar": "Ilmu Kesehatan & Ekologi.", "karir": "Dokter atau Arsitek Hijau."
@@ -111,19 +111,16 @@ AURA_DB = {
 # --- 1. IDENTIFIKASI ---
 c1, c2 = st.columns([3, 1])
 with c1:
-    nama = st.text_input("1. Silahkan masukkan nama anda:", placeholder="Contoh: Rocky")
+    nama = st.text_input("1. Nama Lengkap:", placeholder="Contoh: Rocky")
 with c2:
     umur = st.number_input("Umur:", min_value=7, max_value=40, value=19)
 
 if nama:
     st.divider()
-    # --- 2. CAMERA AI ---
-    st.write(f"Halo *{nama}*, sensor sedang memetakan spektrum energimu...")
     foto = st.camera_input("2. Ambil Foto Biometrik")
 
     if foto:
-        # --- 3. PROSES AI ---
-        with st.status("🧬 Menganalisis Kepadatan Energi...", expanded=False) as status:
+        with st.status("🧬 Menganalisis Kepadatan Energi...", expanded=False):
             time.sleep(1)
             img = Image.open(foto)
             img = ImageOps.exif_transpose(img)
@@ -134,7 +131,6 @@ if nama:
             idx = int(brightness % len(warna_keys))
             warna_hasil = warna_keys[idx]
             data = AURA_DB[warna_hasil]
-            status.update(label=f"Energi {warna_hasil} Teridentifikasi!", state="complete")
         
         # VISUALISASI
         color_rgb = tuple(int(data["hex"].lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
@@ -146,12 +142,14 @@ if nama:
         st.subheader(f"4. Hasil Analisis Aura: {warna_hasil}")
         st.image(visual, caption=f"Bio-Energy Mapping: {nama}")
         
-        st.markdown(f'<div class="hawkins-box">{data["hawkins"]} Log | {data["state"]}</div>', unsafe_allow_html=True)
+        # Menggunakan format yang lebih aman untuk variabel di dalam HTML
+        hawkins_val = data['hawkins']
+        hawkins_state = data['state']
+        st.markdown(f'<div class="hawkins-box">{hawkins_val} Log | {hawkins_state}</div>', unsafe_allow_html=True)
         st.markdown('<div class="spectrum-bar"></div>', unsafe_allow_html=True)
 
-        # --- 5. ANALISIS GAYA HIDUP BERBASIS ENERGI ---
+        # --- 5. ANALISIS GAYA HIDUP ---
         st.write(f"### 5. Analisis Gaya Hidup: {data['vibrasi']}")
-        
         col_la, col_lb = st.columns(2)
         with col_la:
             st.markdown(f"""
@@ -170,7 +168,7 @@ if nama:
             </div>
             """, unsafe_allow_html=True)
 
-        # --- 6. REKOMENDASI MASA DEPAN ---
+        # --- 6. REKOMENDASI ---
         st.divider()
         if 7 <= umur <= 18:
             st.success(f"📚 *6. Rekomendasi Belajar (Usia {umur} thn)*")
