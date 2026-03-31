@@ -1,33 +1,31 @@
 import streamlit as st
-from PIL import Image, ImageOps, ImageEnhance, ImageDraw
-import numpy as np
-from fpdf import FPDF
+from PIL import Image, ImageOps, ImageEnhance
 import base64
+from fpdf import FPDF
 
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="AuraLens Pro", page_icon="🔮", layout="centered")
 
-# Tema Gelap untuk Streamlit (Membuat aplikasi lebih estetik)
+# Tema Gelap untuk Estetika Cozy
 st.markdown("""
     <style>
     .main { background-color: #0E1117; color: #FFFFFF; }
     .stTextInput>div>div>input { background-color: #262730; color: #FFFFFF; }
     .stSelectbox>div>div>div { background-color: #262730; color: #FFFFFF; }
-    div.stButton > button:first-child { background-color: #4B0082; color: #FFFFFF; }
+    div.stButton > button:first-child { background-color: #4B0082; color: #FFFFFF; border: none;}
     div.stAlert { background-color: #262730; color: #FFFFFF; border: none;}
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🔮 AuraLens Pro: AI Scanner")
+st.title("🔮 AuraLens Pro: AI Visualizer")
 st.markdown("### Temukan Energi Karir & Penyeimbang Dirimu")
 
-# --- DATABASE AURA (LOGIKA PRODUK) ---
-# Menambahkan data saran dan penyeimbang
+# --- DATABASE AURA (LOGIKA PRODUK & SARAN) ---
 AURA_DATABASE = {
     "Merah": {
         "warna_hex": "#FF0000",
         "deskripsi": "Energi Berani & Semangat tinggi!",
-        "analisis": "Kamu adalah eksekutor alami. Berani mengambil risiko dan penuh semangat.",
+        "analisis": "Kamu adalah eksekutor alami. Penuh gairah dan berani mengambil risiko.",
         "karir": "Eksekutor, Sales, Atlet, Pemimpin Proyek.",
         "hewan": "Kucing (Menenangkan)",
         "benda": "Kristal Amethyst"
@@ -35,7 +33,7 @@ AURA_DATABASE = {
     "Emas": {
         "warna_hex": "#FFD700",
         "deskripsi": "Energi Kelimpahan & Hikmat!",
-        "analisis": "Kamu memiliki aura kepemimpinan alami. Bijaksana dan karismatik.",
+        "analisis": "Kamu memiliki aura kepemimpinan alami. Bijaksana, karismatik, dan menginspirasi.",
         "karir": "CEO, Mentor, Penulis, Pengambil Keputusan.",
         "hewan": "Kuda (Kekuatan & Kebebasan)",
         "benda": "Jam Tangan Logam"
@@ -43,7 +41,7 @@ AURA_DATABASE = {
     "Cyan": {
         "warna_hex": "#00FFFF",
         "deskripsi": "Energi Damai & Komunikasi!",
-        "analisis": "Kamu adalah pembicara yang baik dan penyembuh alami. Membawa kedamaian.",
+        "analisis": "Kamu adalah penyembuh alami dan pembicara yang baik. Membawa kedamaian.",
         "karir": "HRD, Guru, Konselor, Jurnalis.",
         "hewan": "Burung (Kebebasan & Kreativitas)",
         "benda": "Mint Aromaterapi"
@@ -51,7 +49,7 @@ AURA_DATABASE = {
     "Ungu": {
         "warna_hex": "#800080",
         "deskripsi": "Energi Kreativitas & Intuisi!",
-        "analisis": "Kamu memiliki intuisi yang kuat. Inovatif dan artistik.",
+        "analisis": "Kamu memiliki intuisi yang sangat kuat. Inovatif dan artistik.",
         "karir": "Desainer, Artis, Inovator, Peneliti.",
         "hewan": "Gajah (Kebijaksanaan & Kekuatan)",
         "benda": "Black Tourmaline"
@@ -72,13 +70,13 @@ if nama:
     if tombol_scan:
         st.success(f"### Hasil Scan: Aura {opsi_aura}")
         
-        # Fitur Ambil Foto dengan Input Kamera
+        # Fitur Ambil Foto (st.camera_input menampilkan foto kembali)
         foto = st.camera_input("Ambil foto untuk visualisasi auramu")
         
         if foto:
             # 1. MEMBUAT EFEK GLOW AURA VISUAL (Sihir Kita!)
             img = Image.open(foto)
-            img = ImageOps.exif_transpose(img) # Memperbaiki orientasi foto (terutama di HP)
+            img = ImageOps.exif_transpose(img) # Memperbaiki orientasi (terutama HP)
             
             # Membuat pendaran warna (tint)
             color_hex = AURA_DATABASE[opsi_aura]["warna_hex"]
@@ -92,7 +90,7 @@ if nama:
             enhancer = ImageEnhance.Brightness(combined)
             glowing_img = enhancer.enhance(1.2)
             
-            # Tampilkan Foto dengan Efek Aura
+            # Menampilkan Foto dengan Efek Aura (WAJIB ADA!)
             st.image(glowing_img, caption=f"Visualisasi Aura {opsi_aura} - {nama}")
             
             # 2. MENAMPILKAN SARAN & ANALISIS (Yang Mbak Ayi Minta!)
