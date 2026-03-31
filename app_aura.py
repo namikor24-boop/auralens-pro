@@ -105,14 +105,14 @@ if nama and not run_cam:
     
     with col1:
         st.subheader("💼 Career Path")
-        st.info(f"**Aura:** {opsi_aura}")
-        st.write(f"**Deskripsi:** {data['deskripsi']}")
-        st.success(f"**Profesi Cocok:** {data['karir']}")
+        st.info(f"*Aura:* {opsi_aura}")
+        st.write(f"*Deskripsi:* {data['deskripsi']}")
+        st.success(f"*Profesi Cocok:* {data['karir']}")
 
     with col2:
         st.subheader("⚖️ Aura Balancer")
-        st.warning(f"**Totem Hewan:** {data['hewan']}")
-        st.warning(f"**Benda Penyeimbang:** {data['benda']}")
+        st.warning(f"*Totem Hewan:* {data['hewan']}")
+        st.warning(f"*Benda Penyeimbang:* {data['benda']}")
 
     # --- 7. GENERATE PDF REPORT (PREMIUM) ---
     if st.button("Generate Premium Report (PDF)"):
