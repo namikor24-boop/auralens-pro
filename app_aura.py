@@ -47,7 +47,7 @@ AURA_DB = {
 # --- 1. INPUT DATA ---
 c1, c2 = st.columns([3, 1])
 with c1:
-    nama = st.text_input("1. Nama Lengkap:", placeholder="Contoh: Mbak Ayi")
+    nama = st.text_input("1. Nama Lengkap:", placeholder="Contoh: Rocky")
 with c2:
     umur = st.number_input("Umur:", min_value=7, max_value=60, value=9)
 
@@ -140,4 +140,5 @@ if nama:
             href = f'<a href="data:application/pdf;base64,{b64}" download="AuraReport_{nama}.pdf" style="color:white; text-decoration:none; background:#4B0082; padding:15px; border-radius:10px; display:block; text-align:center; border: 1px solid #FFD700;">KLIK DI SINI UNTUK DOWNLOAD PDF</a>'
             st.markdown(href, unsafe_allow_html=True)
 
-    st.markdown
+   # Pakai st.caption saja supaya lebih aman dari 'pop-up' bantuan di HP
+st.caption("© 2026 Namikor. All Rights Reserved.")
