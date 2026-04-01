@@ -2,6 +2,7 @@ import streamlit as st
 from PIL import Image, ImageOps, ImageStat
 import time
 from fpdf import FPDF
+import io
 
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="AuraLens Pro Max AI", page_icon="🔮", layout="centered")
@@ -24,20 +25,20 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 st.title("🔮 AuraLens Pro Max AI")
-st.caption("Advanced Biometric Life Blueprint Analysis - By Namikor")
+st.caption("Advanced Biometric Analysis - By Namikor")
 
 # --- 2. DATABASE MASTER ---
 AURA_DB = {
-    "Merah": {"hex": "#FF0000", "hawkins": 150, "state": "Action", "tantangan": "Mudah marah & impulsif.", "solusi": "Salurkan energi ke olahraga. Kesabaran adalah kekuatan yang tenang."},
-    "Jingga": {"hex": "#FF7F00", "hawkins": 200, "state": "Courage", "tantangan": "Sering cemas penilaian orang.", "solusi": "Fokus pada proses, duniamu indah apa adanya."},
-    "Kuning": {"hex": "#FFFF00", "hawkins": 310, "state": "Willingness", "tantangan": "Terlalu banyak berpikir.", "solusi": "Mulailah langkah kecil sekarang juga."},
-    "Hijau": {"hex": "#00FF00", "hawkins": 400, "state": "Reason", "tantangan": "Sering lupa mencintai diri sendiri.", "solusi": "Istirahat sejenak, kamu berhak bahagia."},
-    "Biru": {"hex": "#0000FF", "hawkins": 500, "state": "Love", "tantangan": "Takut jujur karena konflik.", "solusi": "Bicaralah dari hati, suaramu sangat berharga."},
+    "Merah": {"hex": "#FF0000", "hawkins": 150, "state": "Action", "tantangan": "Mudah marah & impulsif.", "solusi": "Salurkan energi ke olahraga. Kesabaran adalah kekuatan."},
+    "Jingga": {"hex": "#FF7F00", "hawkins": 200, "state": "Courage", "tantangan": "Cemas penilaian orang.", "solusi": "Fokus pada proses, duniamu indah."},
+    "Kuning": {"hex": "#FFFF00", "hawkins": 310, "state": "Willingness", "tantangan": "Terlalu banyak berpikir.", "solusi": "Mulailah langkah kecil sekarang."},
+    "Hijau": {"hex": "#00FF00", "hawkins": 400, "state": "Reason", "tantangan": "Lupa mencintai diri sendiri.", "solusi": "Istirahat sejenak, kamu berhak bahagia."},
+    "Biru": {"hex": "#0000FF", "hawkins": 500, "state": "Love", "tantangan": "Takut jujur karena konflik.", "solusi": "Bicaralah dari hati, suaramu berharga."},
     "Nila": {"hex": "#4B0082", "hawkins": 540, "state": "Joy", "tantangan": "Merasa kesepian dengan visimu.", "solusi": "Cari teman sefrekuensi untuk berbagi ide."},
-    "Ungu": {"hex": "#800080", "hawkins": 600, "state": "Peace", "tantangan": "Terlalu idealis.", "solusi": "Bantu hal nyata yang ada di depan mata."},
+    "Ungu": {"hex": "#800080", "hawkins": 600, "state": "Peace", "tantangan": "Terlalu idealis.", "solusi": "Bantu hal nyata di depan mata."},
     "Abu-Abu": {"hex": "#808080", "hawkins": 250, "state": "Neutrality", "tantangan": "Hidup terasa datar.", "solusi": "Coba satu hal baru yang menantang."},
     "Marun": {"hex": "#800000", "hawkins": 175, "state": "Intensity", "tantangan": "Sangat keras pada diri sendiri.", "solusi": "Maafkan masa lalu, kamu sedang berproses."},
-    "Hitam": {"hex": "#1A1A1A", "hawkins": 100, "state": "Protection", "tantangan": "Takut disakiti kembali.", "solusi": "Beranilah terbuka pada hal baik di sekitarmu."}
+    "Hitam": {"hex": "#1A1A1A", "hawkins": 100, "state": "Protection", "tantangan": "Takut disakiti kembali.", "solusi": "Beranilah terbuka pada hal baik."}
 }
 
 # --- 3. INPUT DATA ---
@@ -69,31 +70,42 @@ if nama:
         st.markdown(f'<div class="warning-card">⚠️ <b>TANTANGAN:</b> {res["tantangan"]}</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="motivation-card">✨ <b>REKOMENDASI:</b> {res["solusi"]}</div>', unsafe_allow_html=True)
 
-        # --- PROSES PDF ---
+        # --- PERBAIKAN LOGIKA PDF ---
+        # Buat PDF dalam memory (buffer)
+        buf = io.BytesIO()
         visual.save("temp_aura.jpg")
+        
         pdf = FPDF()
         pdf.add_page()
         pdf.set_fill_color(14, 17, 23)
         pdf.rect(0, 0, 210, 297, 'F')
+        
         pdf.set_text_color(255, 215, 0)
         pdf.set_font("Arial", 'B', 16)
         pdf.cell(0, 20, "NAMIKOR AURA LENS REPORT", ln=True, align='C')
+        
         pdf.image("temp_aura.jpg", x=55, y=40, w=100)
         pdf.ln(100)
+        
         pdf.set_text_color(255, 255, 255)
         pdf.set_font("Arial", 'B', 12)
         pdf.cell(0, 10, f"Nama: {nama}", ln=True)
         pdf.cell(0, 10, f"Warna Aura: {warna_hasil}", ln=True)
         pdf.ln(5)
         pdf.multi_cell(0, 8, f"Saran Namikor: {res['solusi']}")
+        
         pdf.ln(10)
+        pdf.set_font("Arial", 'I', 10)
+        pdf.set_text_color(150, 150, 150)
         pdf.cell(0, 10, "© 2026 Namikor. All Rights Reserved.", ln=True, align='C')
         
-        pdf_out = pdf.output(dest='S').encode('latin-1')
+        # Simpan ke buffer
+        pdf_bytes = pdf.output(dest='S').encode('latin-1')
 
+        st.divider()
         st.download_button(
             label="📥 DOWNLOAD LAPORAN PDF (NAMIKOR)",
-            data=pdf_out,
+            data=pdf_bytes,
             file_name=f"Aura_Namikor_{nama}.pdf",
             mime="application/pdf"
         )
