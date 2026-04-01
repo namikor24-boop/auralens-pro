@@ -1,154 +1,152 @@
 import streamlit as st
 from PIL import Image, ImageOps, ImageStat
 import time
-import base64
-from fpdf import FPDF
+import io
 
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="AuraLens Pro Max AI", page_icon="🔮", layout="centered")
 
+# CSS UPGRADE: RADIANCE EDITION (Mengejar Vibe AURA Scope)
 st.markdown("""
     <style>
-    .main { background-color: #0E1117; color: white; }
-    div.stButton > button:first-child { 
-        width: 100%; background-color: #4B0082; color: white; 
-        border-radius: 12px; font-weight: bold; border: 2px solid #FFD700;
+    /* Gradient Background yang Misterius */
+    .stApp {
+        background: linear-gradient(180deg, #0A0F1E 0%, #17203A 100%);
+        color: white;
+        font-family: 'Inter', sans-serif; /* Font modern */
     }
     
-    /* RUMAH KAMERA & OVAL */
-    .camera-wrapper {
-        position: relative;
-        width: 100%;
-        margin-top: 20px;
-    }
-
-    /* OVAL PANDUAN - Sekarang posisinya relatif terhadap kotak kamera */
-    .face-guide {
-        position: absolute;
-        top: 40%;  /* Geser sedikit ke atas dari tengah */
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 180px;
-        height: 240px;
-        border: 3px dashed #FFD700;
-        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-        z-index: 99;
-        pointer-events: none; /* Supaya tombol 'Take Photo' tetap bisa diklik */
-        box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-    }
-
-    .guide-label {
-        position: absolute;
-        bottom: 25%;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(75, 0, 130, 0.8);
+    /* Judul Utama */
+    h1 {
+        text-align: center;
         color: #FFD700;
-        padding: 4px 12px;
-        border-radius: 10px;
-        font-size: 11px;
-        z-index: 100;
-        white-space: nowrap;
-        pointer-events: none;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    }
+    
+    /* Tombol Utama yang 'Glow' */
+    div.stButton > button:first-child { 
+        width: 100%; 
+        background: linear-gradient(90deg, #6200EA, #AA00FF);
+        color: white; 
+        border-radius: 30px; /* Lebih bulat */
+        font-weight: bold; 
+        border: none;
+        font-size: 16px;
+        padding: 12px 0;
+        box-shadow: 0 4px 15px rgba(170, 0, 255, 0.4);
+        transition: all 0.3s ease;
+    }
+    div.stButton > button:first-child:hover {
+        box-shadow: 0 6px 20px rgba(170, 0, 255, 0.6);
+        transform: translateY(-2px);
     }
 
-    .hawkins-box {
-        font-size: 24px; font-weight: bold; text-align: center; color: #FFFFFF;
-        background: linear-gradient(45deg, #4B0082, #000000);
-        border-radius: 15px; padding: 20px; border: 2px solid #FFD700; margin: 15px 0px;
+    /* KOTAK INFOGRAFIS DI LAYAR */
+    .info-container {
+        background-color: rgba(26, 29, 36, 0.8); /* Transparan dikit */
+        border-radius: 20px;
+        padding: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 25px;
+        backdrop-filter: blur(10px); /* Efek kaca buram */
     }
-    .spectrum-bar { height: 12px; width: 100%; background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet); border-radius: 10px; margin: 15px 0px; }
-    .blueprint-card { background-color: #1E1E1E; padding: 20px; border-radius: 15px; border-left: 6px solid #FFD700; margin-top: 20px; }
-    .copyright { text-align: center; font-size: 12px; color: #888; margin-top: 50px; border-top: 1px solid #333; padding-top: 20px; }
+    .info-header {
+        font-size: 26px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+    .info-section {
+        background-color: rgba(33, 38, 45, 0.6);
+        border-radius: 15px;
+        padding: 18px;
+        margin-bottom: 15px;
+        border-left: 6px solid;
+    }
+    .stat-label { color: #8B949E; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;}
+    .stat-value { color: white; font-size: 22px; font-weight: bold; }
+    
+    /* Progress Bar Kustom */
+    .stProgress > div > div > div > div { background-image: linear-gradient(to right, #AA00FF, #FFD700); }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("🔮 AuraLens Pro Max AI")
-st.caption("Advanced Biometric Life Blueprint Analysis - By Namikor")
+st.caption("Advanced Biometric Analysis - By Namikor")
 
-# Database Master
+# --- 2. DATABASE MASTER (INFOGRAFIS STYLE) ---
 AURA_DB = {
-    "Merah": {"hex": "#FF0000", "hawkins": 150, "state": "Action", "blueprint": "Pelopor Berani & Tak Kenal Takut."},
-    "Jingga": {"hex": "#FF7F00", "hawkins": 200, "state": "Courage", "blueprint": "Pencipta Ekspresif & Bersemangat."},
-    "Kuning": {"hex": "#FFFF00", "hawkins": 310, "state": "Willingness", "blueprint": "Pemikir Logis & Cerdas."},
-    "Hijau": {"hex": "#00FF00", "hawkins": 400, "state": "Reason", "blueprint": "Penyembuh Penyeimbang & Empati."},
-    "Biru": {"hex": "#0000FF", "hawkins": 500, "state": "Love", "blueprint": "Penyampai Pesan Tulus & Damai."},
-    "Nila": {"hex": "#4B0082", "hawkins": 540, "state": "Joy", "blueprint": "Visioner Intuitif."},
-    "Ungu": {"hex": "#800080", "hawkins": 600, "state": "Peace", "blueprint": "Bijaksana Inovatif & Spiritual."}
+    "Merah": {"hex": "#FF0000", "vibrasi": "85 Hz", "deskripsi": "Pemrakarsa energi fisik penuh aksi.", "tips": "Latihan meditasi & sabar.", "partner": "Jingga, Kuning", "vibe": "Pure Action"},
+    "Jingga": {"hex": "#FF7F00", "vibrasi": "72 Hz", "deskripsi": "Jiwa seni kreatif & berani.", "tips": "Portofolio kreatif & hidup balance.", "partner": "Merah, Kuning", "vibe": "Vibrant Soul"},
+    "Kuning": {"hex": "#FFFF00", "vibrasi": "82 Hz", "deskripsi": "Pemikir logis & problem solver.", "tips": "Manajemen waktu & coding.", "partner": "Biru, Hijau", "vibe": "Logic Willingness"},
+    "Hijau": {"hex": "#00FF00", "vibrasi": "60 Hz", "deskripsi": "Penyembuh empati & harmoni.", "tips": "Time management & empati.", "partner": "Kuning, Biru", "vibe": "Soft Healing"},
+    "Biru": {"hex": "#0000FF", "vibrasi": "68 Hz", "deskripsi": "Penyampai pesan tulus & damai.", "tips": "Public speaking & kejujuran.", "partner": "Kuning, Hijau", "vibe": "Clear Communication"},
+    "Nila": {"hex": "#4B0082", "vibrasi": "78 Hz", "deskripsi": "Visioner intuitif masa depan.", "tips": "Inovasi & kolaborasi tim.", "partner": "Ungu, Putih", "vibe": "Mystic Joy"},
+    "Ungu": {"hex": "#800080", "vibrasi": "55 Hz", "deskripsi": "Bijaksana, inovatif, & spiritual.", "tips": "Leadership & mindfulness.", "partner": "Nila, Putih", "vibe": "Peaceful Wisdom"}
 }
 
-# --- 1. INPUT DATA ---
-c1, c2 = st.columns([3, 1])
-with c1:
-    nama = st.text_input("1. Nama Lengkap:", placeholder="Contoh: Rocky")
-with c2:
-    umur = st.number_input("Umur:", min_value=7, max_value=60, value=9)
+# --- 3. INPUT DATA ---
+nama = st.text_input("1. Nama Lengkap:", placeholder="Masukkan nama kamu...")
+umur = st.number_input("Umur:", min_value=7, max_value=60, value=9)
 
 if nama:
     st.divider()
-    
-    # --- BAGIAN KAMERA DENGAN OVAL YANG SUDAH DIPERBAIKI ---
-    st.markdown('<div class="camera-wrapper">', unsafe_allow_html=True)
-    st.markdown('<div class="face-guide"></div><div class="guide-label">POSISIKAN WAJAH DI SINI</div>', unsafe_allow_html=True)
-    
-    foto = st.camera_input("2. Pindai Prana & Energi Bio-Foton")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-    # -------------------------------------------------------
+    foto = st.camera_input("2. Ambil Foto Aura ✨")
 
     if foto:
-        with st.status("🧬 Memproses Energi...", expanded=False) as status:
-            time.sleep(1.5)
-            img = Image.open(foto)
-            img = ImageOps.exif_transpose(img)
-            stat = ImageStat.Stat(img)
-            brightness = sum(stat.mean) / 3 
-            warna_keys = list(AURA_DB.keys())
-            warna_hasil = warna_keys[int(brightness % 7)]
-            res = AURA_DB[warna_hasil]
-            status.update(label=f"Aura {warna_hasil} Teridentifikasi!", state="complete")
-
-        # Visualisasi Aura
-        c_rgb = tuple(int(res["hex"].lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
-        glow = Image.new("RGB", img.size, c_rgb)
-        visual = Image.blend(img, glow, alpha=0.3)
+        img = Image.open(foto)
+        img = ImageOps.exif_transpose(img)
+        stat = ImageStat.Stat(img)
+        brightness = sum(stat.mean) / 3 
         
-        st.subheader(f"Hasil Analisis: Aura {warna_hasil}")
-        st.image(visual, use_container_width=True)
-        
-        st.markdown(f'<div class="hawkins-box">{res["hawkins"]} Log | Status: {res["state"]}</div>', unsafe_allow_html=True)
-        st.markdown('<div class="spectrum-bar"></div>', unsafe_allow_html=True)
+        warna_keys = list(AURA_DB.keys())
+        warna_hasil = warna_keys[int(brightness % len(warna_keys))]
+        res = AURA_DB[warna_hasil]
 
-        # 5. BLUEPRINT
-        st.markdown(f"""
-        <div class="blueprint-card">
-        <h3 style='color:#FFD700; margin-top:0;'>🧬 My Life Blueprint</h3>
-        <p><b>Jati Diri:</b> {res['blueprint']}</p>
+        st.success(f"Analisis Selesai! Aura Dominan: {warna_hasil} ✨")
+        
+        # --- 4. TAMPILAN INFOGRAFIS DI LAYAR (HTML/CSS Upgrade) ---
+        warna_hex = res["hex"]
+        
+        infografis_html = f"""
+        <div class="info-container">
+            <div class="info-header">✨ NAMIKOR AURA BLUEPRINT</div>
+            
+            <div class="info-section" style="border-left-color: {warna_hex}; background-color: rgba(33, 38, 45, 0.4);">
+                <div class="stat-label">Aura Dominan</div>
+                <div class="info-header" style="color: {warna_hex}; font-size: 36px; text-align: left; margin: 0; text-transform: none;">{warna_hasil}</div>
+                <div class="stat-value" style="font-size: 14px; color: #FFD700; margin-top: 5px;">Status: {res['vibe']}</div>
+                <p style="color: #A3B3C1; font-size: 14px; margin-top: 15px;">{res['deskripsi']}</p>
+            </div>
+            
+            <div class="info-section" style="border-left-color: #00FFFF;">
+                <div class="stat-label">Frekuensi Vibrasi</div>
+                <div class="stat-value" style="color: #00FFFF; font-size: 28px;">{res['vibrasi']}</div>
+            </div>
+            
+            <div class="info-section" style="border-left-color: #FFD700;">
+                <div class="stat-label">Rekomendasi Sukses (Namikor) ✨</div>
+                <p style="color: white; font-size: 15px; font-weight: bold; margin: 8px 0;">{res['tips']}</p>
+            </div>
+            
+            <div class="info-section" style="border-left-color: {warna_hex}; margin-bottom: 0;">
+                <div class="stat-label">Partner yang Cocok</div>
+                <div class="stat-value" style="font-size: 16px;">{res['partner']}</div>
+            </div>
+
+            <div style="text-align: center; color: #555; font-size: 10px; margin-top: 25px; letter-spacing: 1px;">
+                ID: {nama[:3].upper()}-{umur}-{warna_hasil[:2].upper()} | OFFICIAL REPORT BY NAMIKOR
+            </div>
         </div>
-        """, unsafe_allow_html=True)
+        """
+        st.markdown(infografis_html, unsafe_allow_html=True)
+        
+        st.info("💡 Tips: Screenshot tampilan di atas untuk menyimpan infografis Aura Namikor kamu yang keren ini!")
 
-        # 6. DOWNLOAD PDF
-        st.divider()
-        if st.button("📥 Download Laporan PDF"):
-            visual.save("temp_aura.jpg")
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_fill_color(14, 17, 23)
-            pdf.rect(0, 0, 210, 297, 'F')
-            pdf.set_text_color(255, 215, 0)
-            pdf.set_font("Arial", 'B', 18)
-            pdf.cell(0, 20, "NAMIKOR AURA REPORT", ln=True, align='C')
-            
-            pdf_out = pdf.output(dest='S')
-            if isinstance(pdf_out, str): pdf_out = pdf_out.encode('latin-1')
-            
-            st.download_button(
-                label="KLIK UNTUK SIMPAN PDF",
-                data=pdf_out,
-                file_name=f"Aura_Namikor_{nama}.pdf",
-                mime="application/pdf"
-            )
-
-    st.markdown(f'<div class="copyright">© 2026 <b>Namikor</b>. All Rights Reserved.</div>', unsafe_allow_html=True)
+    st.caption("© 2026 Namikor. All Rights Reserved.")
 else:
     st.info("Sistem Standby. Silahkan masukkan nama untuk memulai.")
