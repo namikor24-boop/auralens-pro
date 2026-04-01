@@ -2,6 +2,7 @@ import streamlit as st
 from PIL import Image, ImageOps, ImageStat
 from fpdf import FPDF
 import time
+import io
 
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="AuraLens Pro Max AI", page_icon="🔮", layout="centered")
@@ -69,48 +70,50 @@ if nama:
         st.markdown(f'<div class="warning-card">⚠️ <b>TANTANGAN:</b> {res["tantangan"]}</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="motivation-card">✨ <b>REKOMENDASI:</b> {res["solusi"]}</div>', unsafe_allow_html=True)
 
-        # --- PERBAIKAN DOWNLOAD PDF ---
+        # --- PERBAIKAN DOWNLOAD PDF (VERSI TERKUAT) ---
         st.divider()
         
-        # 1. Simpan foto sementara
-        visual.save("temp_aura.jpg")
-        
-        # 2. Buat PDF dengan fpdf
+        # 1. Buat PDF
         pdf = FPDF()
         pdf.add_page()
+        
+        # Background Gelap
         pdf.set_fill_color(14, 17, 23)
         pdf.rect(0, 0, 210, 297, 'F')
         
+        # Judul Laporan
         pdf.set_text_color(255, 215, 0)
         pdf.set_font("Arial", 'B', 20)
         pdf.cell(0, 20, "NAMIKOR AURA LENS REPORT", ln=True, align='C')
         
+        # Simpan Gambar Sementara untuk PDF
+        visual.save("temp_aura.jpg")
         pdf.image("temp_aura.jpg", x=55, y=45, w=100)
         pdf.ln(110)
         
+        # Isi Laporan
         pdf.set_text_color(255, 255, 255)
         pdf.set_font("Arial", 'B', 14)
         pdf.cell(0, 10, f"Nama: {nama}", ln=True)
         pdf.cell(0, 10, f"Warna Aura: {warna_hasil}", ln=True)
-        
         pdf.ln(5)
         pdf.set_font("Arial", '', 12)
-        pdf.multi_cell(0, 8, f"Pesan Namikor: {res['solusi']}")
+        pdf.multi_cell(0, 8, f"Saran Namikor: {res['solusi']}")
         
         pdf.ln(15)
         pdf.set_font("Arial", 'I', 10)
         pdf.set_text_color(150, 150, 150)
         pdf.cell(0, 10, "© 2026 Namikor. All Rights Reserved.", ln=True, align='C')
         
-        # 3. Bagian Paling Penting: Cara output PDF yang benar
-        pdf_data = pdf.output(dest='S')
-        # Jika pdf_data berupa string (di beberapa versi fpdf), kita ubah ke bytes
-        if isinstance(pdf_data, str):
-            pdf_data = pdf_data.encode('latin-1')
-
+        # 2. PROSES DATA KE BYTES (Cara ini paling aman dari error TypeError)
+        pdf_bytes = pdf.output(dest='S')
+        if isinstance(pdf_bytes, str):
+            pdf_bytes = pdf_bytes.encode('latin-1')
+        
+        # 3. TOMBOL DOWNLOAD ASLI STREAMLIT
         st.download_button(
-            label="📥 DOWNLOAD & LIHAT LAPORAN PDF",
-            data=pdf_data,
+            label="📥 DOWNLOAD LAPORAN PDF (NAMIKOR)",
+            data=pdf_bytes,
             file_name=f"Aura_Namikor_{nama}.pdf",
             mime="application/pdf"
         )
