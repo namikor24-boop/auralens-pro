@@ -70,4 +70,3 @@ AURA_DB = {
         "tantangan": "Menutup diri terlalu rapat karena takut disakiti kembali.", 
         "solusi": "Perisai melindungimu, tapi juga menghalangi cahaya. Beranilah terbuka pada hal-hal baik."
     }
-}
