@@ -7,7 +7,6 @@ from fpdf import FPDF
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="AuraLens Pro Max AI", page_icon="🔮", layout="centered")
 
-# CSS Upgrade: Menambahkan Overlay Face Guide
 st.markdown("""
     <style>
     .main { background-color: #0E1117; color: white; }
@@ -16,38 +15,40 @@ st.markdown("""
         border-radius: 12px; font-weight: bold; border: 2px solid #FFD700;
     }
     
-    /* PANDUAN WAJAH (FACE GUIDE) */
-    .camera-container {
+    /* RUMAH KAMERA & OVAL */
+    .camera-wrapper {
         position: relative;
-        text-align: center;
+        width: 100%;
+        margin-top: 20px;
     }
-    
-    /* Garis Oval Panduan */
-    .face-overlay {
+
+    /* OVAL PANDUAN - Sekarang posisinya relatif terhadap kotak kamera */
+    .face-guide {
         position: absolute;
-        top: 50%;
+        top: 40%;  /* Geser sedikit ke atas dari tengah */
         left: 50%;
-        transform: translate(-50%, -85%); /* Mengatur posisi oval agar pas di area kamera */
+        transform: translate(-50%, -50%);
         width: 180px;
         height: 240px;
         border: 3px dashed #FFD700;
         border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-        pointer-events: none; /* Agar tidak menghalangi klik pada tombol kamera */
-        z-index: 10;
-        box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        z-index: 99;
+        pointer-events: none; /* Supaya tombol 'Take Photo' tetap bisa diklik */
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
     }
-    
-    .face-text {
+
+    .guide-label {
         position: absolute;
-        top: 10%;
+        bottom: 25%;
         left: 50%;
         transform: translateX(-50%);
-        background-color: rgba(75, 0, 130, 0.7);
-        padding: 5px 15px;
-        border-radius: 20px;
-        font-size: 12px;
+        background: rgba(75, 0, 130, 0.8);
         color: #FFD700;
-        z-index: 11;
+        padding: 4px 12px;
+        border-radius: 10px;
+        font-size: 11px;
+        z-index: 100;
+        white-space: nowrap;
         pointer-events: none;
     }
 
@@ -81,18 +82,22 @@ c1, c2 = st.columns([3, 1])
 with c1:
     nama = st.text_input("1. Nama Lengkap:", placeholder="Contoh: Rocky")
 with c2:
-    umur = st.number_input("Umur:", min_value=7, max_value=40, value=9)
+    umur = st.number_input("Umur:", min_value=7, max_value=60, value=9)
 
 if nama:
     st.divider()
     
-    # Bungkus kamera dengan container CSS agar overlay muncul
-    st.markdown('<div class="camera-container"><div class="face-text">POSISIKAN WAJAH DI DALAM OVAL</div><div class="face-overlay"></div>', unsafe_allow_html=True)
+    # --- BAGIAN KAMERA DENGAN OVAL YANG SUDAH DIPERBAIKI ---
+    st.markdown('<div class="camera-wrapper">', unsafe_allow_html=True)
+    st.markdown('<div class="face-guide"></div><div class="guide-label">POSISIKAN WAJAH DI SINI</div>', unsafe_allow_html=True)
+    
     foto = st.camera_input("2. Pindai Prana & Energi Bio-Foton")
+    
     st.markdown('</div>', unsafe_allow_html=True)
+    # -------------------------------------------------------
 
     if foto:
-        with st.status("🧬 Memproses Chakra Spin...", expanded=False) as status:
+        with st.status("🧬 Memproses Energi...", expanded=False) as status:
             time.sleep(1.5)
             img = Image.open(foto)
             img = ImageOps.exif_transpose(img)
@@ -132,13 +137,18 @@ if nama:
             pdf.rect(0, 0, 210, 297, 'F')
             pdf.set_text_color(255, 215, 0)
             pdf.set_font("Arial", 'B', 18)
-            pdf.cell(0, 20, "AURA LENS PRO: OFFICIAL REPORT", ln=True, align='C')
+            pdf.cell(0, 20, "NAMIKOR AURA REPORT", ln=True, align='C')
             
-            pdf_bytes = pdf.output(dest='S').encode('latin-1')
-            b64 = base64.b64encode(pdf_bytes).decode()
-            href = f'<a href="data:application/pdf;base64,{b64}" download="Report_{nama}.pdf" style="color:white; text-decoration:none; background:#4B0082; padding:15px; border-radius:10px; display:block; text-align:center; border: 1px solid #FFD700;">KLIK DI SINI UNTUK DOWNLOAD PDF</a>'
-            st.markdown(href, unsafe_allow_html=True)
+            pdf_out = pdf.output(dest='S')
+            if isinstance(pdf_out, str): pdf_out = pdf_out.encode('latin-1')
+            
+            st.download_button(
+                label="KLIK UNTUK SIMPAN PDF",
+                data=pdf_out,
+                file_name=f"Aura_Namikor_{nama}.pdf",
+                mime="application/pdf"
+            )
 
     st.markdown(f'<div class="copyright">© 2026 <b>Namikor</b>. All Rights Reserved.</div>', unsafe_allow_html=True)
 else:
-    st.info("Sistem Standby. Silahkan masukkan nama dan umur untuk memulai.")
+    st.info("Sistem Standby. Silahkan masukkan nama untuk memulai.")
