@@ -1,123 +1,67 @@
-import streamlit as st
-from PIL import Image, ImageOps, ImageStat
-from fpdf import FPDF
-import time
-import io
+import tkinter as tk
+import random
 
-# --- 1. KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="AuraLens Pro Max AI", page_icon="🔮", layout="centered")
-
-st.markdown("""
-    <style>
-    .main { background-color: #0E1117; color: white; }
-    div.stButton > button:first-child { 
-        width: 100%; background-color: #4B0082; color: white; 
-        border-radius: 12px; font-weight: bold; border: 2px solid #FFD700;
+# Data Warna, Sisi Tantangan, dan Motivasi
+aura_data = [
+    {
+        "warna": "#4B0082", "nama": "Ungu Tua", 
+        "tantangan": "Terasa berat dan penuh misteri yang menekan.",
+        "motivasi": "Misteri bukan untuk ditakuti. Di balik ketidaktahuan, ada potensi raksasa yang menunggumu!"
+    },
+    {
+        "warna": "#708090", "nama": "Abu-Abu Baja", 
+        "tantangan": "Terkesan dingin dan tidak punya perasaan.",
+        "motivasi": "Jadilah teguh seperti baja. Fokuslah pada tujuanmu di tengah badai emosi."
+    },
+    {
+        "warna": "#800000", "nama": "Merah Marun", 
+        "tantangan": "Menyimpan amarah atau ketegangan yang serius.",
+        "motivasi": "Ubah energi lelahmu menjadi bahan bakar. Keberanian sejati adalah tetap melangkah!"
+    },
+    {
+        "warna": "#CC5500", "nama": "Oranye Senja", 
+        "tantangan": "Terlihat berisik dan terlalu memaksakan perhatian.",
+        "motivasi": "Kreativitasmu adalah cahayamu. Biarkan ia bersinar tanpa perlu meminta izin siapa pun."
     }
-    .hawkins-box {
-        font-size: 24px; font-weight: bold; text-align: center; color: #FFFFFF;
-        background: linear-gradient(45deg, #4B0082, #000000);
-        border-radius: 15px; padding: 20px; border: 2px solid #FFD700; margin: 15px 0px;
-    }
-    .warning-card { background-color: #2D1B1B; padding: 15px; border-radius: 10px; border-left: 6px solid #FF4B4B; margin-top: 10px; color: #FFCDCD; }
-    .motivation-card { background-color: #1B2D1B; padding: 15px; border-radius: 10px; border-left: 6px solid #4BFF4B; margin-top: 10px; color: #CDFFCD; }
-    </style>
-    """, unsafe_allow_html=True)
+]
 
-st.title("🔮 AuraLens Pro Max AI")
-st.caption("Advanced Biometric Analysis - By Namikor")
+class AuraLensApp:
+    def _init_(self, root):
+        self.root = root
+        self.root.title("Aura Lens - Mood & Motivation")
+        self.root.geometry("500x400")
+        
+        # Label Judul
+        self.label_judul = tk.Label(root, text="Lensa Aura Mbak Ayi", font=("Arial", 18, "bold"))
+        self.label_judul.pack(pady=10)
 
-# --- 2. DATABASE MASTER ---
-AURA_DB = {
-    "Merah": {"hex": "#FF0000", "hawkins": 150, "state": "Action", "tantangan": "Mudah marah & impulsif.", "solusi": "Salurkan energi ke olahraga. Kesabaran adalah kekuatan."},
-    "Jingga": {"hex": "#FF7F00", "hawkins": 200, "state": "Courage", "tantangan": "Cemas penilaian orang.", "solusi": "Fokus pada proses, duniamu indah."},
-    "Kuning": {"hex": "#FFFF00", "hawkins": 310, "state": "Willingness", "tantangan": "Terlalu banyak berpikir.", "solusi": "Mulailah langkah kecil sekarang."},
-    "Hijau": {"hex": "#00FF00", "hawkins": 400, "state": "Reason", "tantangan": "Lupa mencintai diri sendiri.", "solusi": "Istirahat sejenak, kamu berhak bahagia."},
-    "Biru": {"hex": "#0000FF", "hawkins": 500, "state": "Love", "tantangan": "Takut jujur karena konflik.", "solusi": "Bicaralah dari hati, suaramu berharga."},
-    "Nila": {"hex": "#4B0082", "hawkins": 540, "state": "Joy", "tantangan": "Merasa kesepian dengan visimu.", "solusi": "Cari teman sefrekuensi untuk berbagi ide."},
-    "Ungu": {"hex": "#800080", "hawkins": 600, "state": "Peace", "tantangan": "Terlalu idealis.", "solusi": "Bantu hal nyata di depan mata."},
-    "Abu-Abu": {"hex": "#808080", "hawkins": 250, "state": "Neutrality", "tantangan": "Hidup terasa datar.", "solusi": "Coba satu hal baru yang menantang."},
-    "Marun": {"hex": "#800000", "hawkins": 175, "state": "Intensity", "tantangan": "Sangat keras pada diri sendiri.", "solusi": "Maafkan masa lalu, kamu sedang berproses."},
-    "Hitam": {"hex": "#1A1A1A", "hawkins": 100, "state": "Protection", "tantangan": "Takut disakiti kembali.", "solusi": "Beranilah terbuka pada hal baik."}
-}
+        # Frame untuk tampilan warna
+        self.canvas = tk.Canvas(root, width=200, height=100, bg="white", highlightthickness=2)
+        self.canvas.pack(pady=10)
 
-# --- 3. INPUT DATA ---
-nama = st.text_input("1. Nama Lengkap:", placeholder="Masukkan nama...")
-umur = st.number_input("Umur:", min_value=7, max_value=60, value=9)
+        # Label Deskripsi (Sisi Tantangan)
+        self.label_tantangan = tk.Label(root, text="Klik tombol untuk cek Aura", wraplength=400, fg="red", font=("Arial", 10, "italic"))
+        self.label_tantangan.pack(pady=5)
 
-if nama:
-    st.divider()
-    foto = st.camera_input("2. Ambil Foto Aura")
+        # Label Motivasi
+        self.label_motivasi = tk.Label(root, text="", wraplength=400, font=("Arial", 12, "bold"), fg="darkblue")
+        self.label_motivasi.pack(pady=20)
 
-    if foto:
-        img = Image.open(foto)
-        img = ImageOps.exif_transpose(img)
-        stat = ImageStat.Stat(img)
-        brightness = sum(stat.mean) / 3 
-        
-        warna_keys = list(AURA_DB.keys())
-        warna_hasil = warna_keys[int(brightness % len(warna_keys))]
-        res = AURA_DB[warna_hasil]
+        # Tombol Update
+        self.btn = tk.Button(root, text="Update Aura", command=self.update_aura, bg="#333", fg="white", padx=20)
+        self.btn.pack(pady=10)
 
-        st.success(f"Analisis Selesai! Aura: {warna_hasil}")
+    def update_aura(self):
+        # Pilih data acak
+        pilihan = random.choice(aura_data)
         
-        c_rgb = tuple(int(res["hex"].lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
-        glow = Image.new("RGB", img.size, c_rgb)
-        visual = Image.blend(img, glow, alpha=0.3)
-        st.image(visual, use_container_width=True)
+        # Update tampilan
+        self.canvas.configure(bg=pilihan["warna"])
+        self.label_tantangan.configure(text=f"Tantangan {pilihan['nama']}: {pilihan['tantangan']}")
+        self.label_motivasi.configure(text=pilihan["motivasi"])
 
-        st.markdown(f'<div class="hawkins-box">{res["hawkins"]} Log | Status: {res["state"]}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="warning-card">⚠️ <b>TANTANGAN:</b> {res["tantangan"]}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="motivation-card">✨ <b>REKOMENDASI:</b> {res["solusi"]}</div>', unsafe_allow_html=True)
-
-        # --- PERBAIKAN DOWNLOAD PDF (VERSI TERKUAT) ---
-        st.divider()
-        
-        # 1. Buat PDF
-        pdf = FPDF()
-        pdf.add_page()
-        
-        # Background Gelap
-        pdf.set_fill_color(14, 17, 23)
-        pdf.rect(0, 0, 210, 297, 'F')
-        
-        # Judul Laporan
-        pdf.set_text_color(255, 215, 0)
-        pdf.set_font("Arial", 'B', 20)
-        pdf.cell(0, 20, "NAMIKOR AURA LENS REPORT", ln=True, align='C')
-        
-        # Simpan Gambar Sementara untuk PDF
-        visual.save("temp_aura.jpg")
-        pdf.image("temp_aura.jpg", x=55, y=45, w=100)
-        pdf.ln(110)
-        
-        # Isi Laporan
-        pdf.set_text_color(255, 255, 255)
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, f"Nama: {nama}", ln=True)
-        pdf.cell(0, 10, f"Warna Aura: {warna_hasil}", ln=True)
-        pdf.ln(5)
-        pdf.set_font("Arial", '', 12)
-        pdf.multi_cell(0, 8, f"Saran Namikor: {res['solusi']}")
-        
-        pdf.ln(15)
-        pdf.set_font("Arial", 'I', 10)
-        pdf.set_text_color(150, 150, 150)
-        pdf.cell(0, 10, "© 2026 Namikor. All Rights Reserved.", ln=True, align='C')
-        
-        # 2. PROSES DATA KE BYTES (Cara ini paling aman dari error TypeError)
-        pdf_bytes = pdf.output(dest='S')
-        if isinstance(pdf_bytes, str):
-            pdf_bytes = pdf_bytes.encode('latin-1')
-        
-        # 3. TOMBOL DOWNLOAD ASLI STREAMLIT
-        st.download_button(
-            label="📥 DOWNLOAD LAPORAN PDF (NAMIKOR)",
-            data=pdf_bytes,
-            file_name=f"Aura_Namikor_{nama}.pdf",
-            mime="application/pdf"
-        )
-
-    st.caption("© 2026 Namikor. All Rights Reserved.")
-else:
-    st.info("Sistem Standby. Silahkan masukkan nama untuk memulai.")
+# Menjalankan Aplikasi
+if _name_ == "_main_":
+    root = tk.Tk()
+    app = AuraLensApp(root)
+    root.mainloop()
