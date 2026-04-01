@@ -71,45 +71,53 @@ if nama:
         st.markdown(f'<div class="motivation-card">✨ <b>REKOMENDASI:</b> {res["solusi"]}</div>', unsafe_allow_html=True)
 
         # --- PERBAIKAN LOGIKA PDF ---
-        # Buat PDF dalam memory (buffer)
-        buf = io.BytesIO()
-        visual.save("temp_aura.jpg")
+        st.divider()
         
+        # Simpan gambar ke file sementara
+        temp_image_path = "temp_aura.jpg"
+        visual.save(temp_image_path)
+        
+        # Buat PDF
         pdf = FPDF()
         pdf.add_page()
+        
+        # Desain PDF Namikor
         pdf.set_fill_color(14, 17, 23)
         pdf.rect(0, 0, 210, 297, 'F')
         
         pdf.set_text_color(255, 215, 0)
-        pdf.set_font("Arial", 'B', 16)
+        pdf.set_font("Arial", 'B', 20)
         pdf.cell(0, 20, "NAMIKOR AURA LENS REPORT", ln=True, align='C')
         
-        pdf.image("temp_aura.jpg", x=55, y=40, w=100)
-        pdf.ln(100)
+        pdf.image(temp_image_path, x=55, y=40, w=100)
+        pdf.ln(110)
         
         pdf.set_text_color(255, 255, 255)
-        pdf.set_font("Arial", 'B', 12)
+        pdf.set_font("Arial", 'B', 14)
         pdf.cell(0, 10, f"Nama: {nama}", ln=True)
-        pdf.cell(0, 10, f"Warna Aura: {warna_hasil}", ln=True)
-        pdf.ln(5)
-        pdf.multi_cell(0, 8, f"Saran Namikor: {res['solusi']}")
+        pdf.cell(0, 10, f"Warna Aura Dominan: {warna_hasil}", ln=True)
+        pdf.cell(0, 10, f"Status Energi: {res['state']}", ln=True)
         
-        pdf.ln(10)
-        pdf.set_font("Arial", 'I', 10)
+        pdf.ln(5)
+        pdf.set_font("Arial", 'I', 12)
+        pdf.multi_cell(0, 8, f"Saran dari Namikor: {res['solusi']}")
+        
+        pdf.ln(15)
+        pdf.set_font("Arial", '', 10)
         pdf.set_text_color(150, 150, 150)
         pdf.cell(0, 10, "© 2026 Namikor. All Rights Reserved.", ln=True, align='C')
         
-        # Simpan ke buffer
-        pdf_bytes = pdf.output(dest='S').encode('latin-1')
-
-        st.divider()
+        # Output PDF sebagai Bytes
+        pdf_output = pdf.output(dest='S')
+        
+        # Tombol Download Resmi
         st.download_button(
-            label="📥 DOWNLOAD LAPORAN PDF (NAMIKOR)",
-            data=pdf_bytes,
+            label="📥 DOWNLOAD & LIHAT LAPORAN PDF",
+            data=bytes(pdf_output), # Pastikan dalam format bytes murni
             file_name=f"Aura_Namikor_{nama}.pdf",
             mime="application/pdf"
         )
 
     st.caption("© 2026 Namikor. All Rights Reserved.")
 else:
-    st.info("Sistem Standby. Silahkan masukkan nama.")
+    st.info("Sistem Standby. Silahkan masukkan nama untuk memulai analisis.")
