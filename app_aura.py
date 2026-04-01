@@ -7,6 +7,7 @@ from fpdf import FPDF
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="AuraLens Pro Max AI", page_icon="🔮", layout="centered")
 
+# CSS Upgrade: Menambahkan Overlay Face Guide
 st.markdown("""
     <style>
     .main { background-color: #0E1117; color: white; }
@@ -14,6 +15,42 @@ st.markdown("""
         width: 100%; background-color: #4B0082; color: white; 
         border-radius: 12px; font-weight: bold; border: 2px solid #FFD700;
     }
+    
+    /* PANDUAN WAJAH (FACE GUIDE) */
+    .camera-container {
+        position: relative;
+        text-align: center;
+    }
+    
+    /* Garis Oval Panduan */
+    .face-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -85%); /* Mengatur posisi oval agar pas di area kamera */
+        width: 180px;
+        height: 240px;
+        border: 3px dashed #FFD700;
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        pointer-events: none; /* Agar tidak menghalangi klik pada tombol kamera */
+        z-index: 10;
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    }
+    
+    .face-text {
+        position: absolute;
+        top: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(75, 0, 130, 0.7);
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        color: #FFD700;
+        z-index: 11;
+        pointer-events: none;
+    }
+
     .hawkins-box {
         font-size: 24px; font-weight: bold; text-align: center; color: #FFFFFF;
         background: linear-gradient(45deg, #4B0082, #000000);
@@ -26,17 +63,17 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 st.title("🔮 AuraLens Pro Max AI")
-st.caption("Advanced Biometric Life Blueprint Analysis")
+st.caption("Advanced Biometric Life Blueprint Analysis - By Namikor")
 
 # Database Master
 AURA_DB = {
-    "Merah": {"hex": "#FF0000", "hawkins": 150, "state": "Action", "blueprint": "Pelopor Berani & Tak Kenal Takut. Energi fisik murni untuk membuka jalan baru.", "hobi": "Bela diri", "hewan": "Anjing", "karir": "Atlet/CEO"},
-    "Jingga": {"hex": "#FF7F00", "hawkins": 200, "state": "Courage", "blueprint": "Pencipta Ekspresif & Bersemangat. Jiwa paling bersinar saat mengolah imajinasi.", "hobi": "Seni", "hewan": "Kucing", "karir": "Animator/Creator"},
-    "Kuning": {"hex": "#FFFF00", "hawkins": 310, "state": "Willingness", "blueprint": "Pemikir Logis & Cerdas. Sumber solusi dan pengetahuan penerang ketidakpastian.", "hobi": "Coding", "hewan": "Burung", "karir": "Programmer/Ilmuwan"},
-    "Hijau": {"hex": "#00FF00", "hawkins": 400, "state": "Reason", "blueprint": "Penyembuh Penyeimbang & Empati. Kehadiran Anda menenangkan jiwa sekitar.", "hobi": "Kebun", "hewan": "Ikan", "karir": "Dokter/Arsitek"},
-    "Biru": {"hex": "#0000FF", "hawkins": 500, "state": "Love", "blueprint": "Penyampai Pesan Tulus & Damai. Menyatukan hati melalui kata-kata jujur.", "hobi": "Bernyanyi", "hewan": "Golden Retriever", "karir": "Diplomat/Guru"},
-    "Nila": {"hex": "#4B0082", "hawkins": 540, "state": "Joy", "blueprint": "Visioner Intuitif. Melihat masa depan dan potensi yang belum disadari orang lain.", "hobi": "Astronomi", "hewan": "Kucing Siam", "karir": "Inovator"},
-    "Ungu": {"hex": "#800080", "hawkins": 600, "state": "Peace", "blueprint": "Bijaksana Inovatif & Spiritual. Menginspirasi transformasi global melalui cahaya.", "hobi": "Yoga", "hewan": "Kuda", "karir": "Visioner Tech"}
+    "Merah": {"hex": "#FF0000", "hawkins": 150, "state": "Action", "blueprint": "Pelopor Berani & Tak Kenal Takut."},
+    "Jingga": {"hex": "#FF7F00", "hawkins": 200, "state": "Courage", "blueprint": "Pencipta Ekspresif & Bersemangat."},
+    "Kuning": {"hex": "#FFFF00", "hawkins": 310, "state": "Willingness", "blueprint": "Pemikir Logis & Cerdas."},
+    "Hijau": {"hex": "#00FF00", "hawkins": 400, "state": "Reason", "blueprint": "Penyembuh Penyeimbang & Empati."},
+    "Biru": {"hex": "#0000FF", "hawkins": 500, "state": "Love", "blueprint": "Penyampai Pesan Tulus & Damai."},
+    "Nila": {"hex": "#4B0082", "hawkins": 540, "state": "Joy", "blueprint": "Visioner Intuitif."},
+    "Ungu": {"hex": "#800080", "hawkins": 600, "state": "Peace", "blueprint": "Bijaksana Inovatif & Spiritual."}
 }
 
 # --- 1. INPUT DATA ---
@@ -48,7 +85,11 @@ with c2:
 
 if nama:
     st.divider()
+    
+    # Bungkus kamera dengan container CSS agar overlay muncul
+    st.markdown('<div class="camera-container"><div class="face-text">POSISIKAN WAJAH DI DALAM OVAL</div><div class="face-overlay"></div>', unsafe_allow_html=True)
     foto = st.camera_input("2. Pindai Prana & Energi Bio-Foton")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     if foto:
         with st.status("🧬 Memproses Chakra Spin...", expanded=False) as status:
@@ -77,12 +118,11 @@ if nama:
         st.markdown(f"""
         <div class="blueprint-card">
         <h3 style='color:#FFD700; margin-top:0;'>🧬 My Life Blueprint</h3>
-        <p><b>Alur Energi:</b> Prana In → Chakra Spin → {res['state']} Vibration</p>
         <p><b>Jati Diri:</b> {res['blueprint']}</p>
         </div>
         """, unsafe_allow_html=True)
 
-        # 6. DOWNLOAD PDF (DIPERBAIKI SPASINYA)
+        # 6. DOWNLOAD PDF
         st.divider()
         if st.button("📥 Download Laporan PDF"):
             visual.save("temp_aura.jpg")
@@ -93,21 +133,6 @@ if nama:
             pdf.set_text_color(255, 215, 0)
             pdf.set_font("Arial", 'B', 18)
             pdf.cell(0, 20, "AURA LENS PRO: OFFICIAL REPORT", ln=True, align='C')
-            pdf.set_text_color(255, 255, 255)
-            pdf.set_font("Arial", '', 12)
-            pdf.cell(0, 10, f"Subject: {nama} | Age: {umur} | Hawkins: {res['hawkins']} Log", ln=True, align='C')
-            pdf.image("temp_aura.jpg", x=55, y=55, w=100)
-            pdf.ln(115)
-            pdf.set_font("Arial", 'B', 14)
-            pdf.set_text_color(0, 255, 255)
-            pdf.cell(0, 10, "HASIL ANALISIS BLUEPRINT", ln=True)
-            pdf.set_font("Arial", '', 11)
-            pdf.set_text_color(255, 255, 255)
-            pdf.multi_cell(0, 8, f"Warna Dominan: {warna_hasil}\nBio-Vibrasi: {int(brightness*2.5)} Hz\nAnalisis: {res['blueprint']}")
-            pdf.ln(10)
-            pdf.set_font("Arial", 'I', 10)
-            pdf.set_text_color(100, 100, 100)
-            pdf.cell(0, 10, "Copyright 2026 Hikari Salsabila Syauqi. All Rights Reserved.", ln=True, align='C')
             
             pdf_bytes = pdf.output(dest='S').encode('latin-1')
             b64 = base64.b64encode(pdf_bytes).decode()
