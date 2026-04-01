@@ -1,13 +1,12 @@
 import streamlit as st
-from PIL import Image, ImageOps, ImageStat
+from PIL import Image, ImageOps, ImageStat, ImageDraw, ImageFont
 import time
-import base64
-from fpdf import FPDF
 import io
 
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="AuraLens Pro Max AI", page_icon="🔮", layout="centered")
 
+# CSS untuk tampilan gelap yang elegan
 st.markdown("""
     <style>
     .main { background-color: #0E1117; color: white; }
@@ -15,134 +14,116 @@ st.markdown("""
         width: 100%; background-color: #4B0082; color: white; 
         border-radius: 12px; font-weight: bold; border: 2px solid #FFD700;
     }
-    .hawkins-box {
-        font-size: 24px; font-weight: bold; text-align: center; color: #FFFFFF;
-        background: linear-gradient(45deg, #4B0082, #000000);
-        border-radius: 15px; padding: 20px; border: 2px solid #FFD700; margin: 15px 0px;
+    /* Style untuk kotak infografis di layar */
+    .info-container {
+        background-color: #1A1D24;
+        border-radius: 20px;
+        padding: 25px;
+        border: 2px solid #30363D;
+        margin-top: 20px;
+        font-family: 'Courier New', Courier, monospace; /* Gaya tech/program */
     }
-    .spectrum-bar { height: 12px; width: 100%; background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet, grey, maroon, black); border-radius: 10px; margin: 15px 0px; }
-    .blueprint-card { background-color: #1E1E1E; padding: 20px; border-radius: 15px; border-left: 6px solid #FFD700; margin-top: 20px; }
-    .warning-card { background-color: #2D1B1B; padding: 15px; border-radius: 10px; border-left: 6px solid #FF4B4B; margin-top: 10px; color: #FFCDCD; }
-    .motivation-card { background-color: #1B2D1B; padding: 15px; border-radius: 10px; border-left: 6px solid #4BFF4B; margin-top: 10px; color: #CDFFCD; }
-    .copyright { text-align: center; font-size: 12px; color: #888; margin-top: 50px; border-top: 1px solid #333; padding-top: 20px; }
+    .info-header {
+        font-size: 28px;
+        font-weight: bold;
+        color: #FFD700;
+        text-align: center;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+    }
+    .info-section {
+        background-color: #21262D;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 5px solid;
+    }
+    .stat-label { color: #8B949E; font-size: 14px; }
+    .stat-value { color: white; font-size: 20px; font-weight: bold; }
+    .stProgress > div > div > div > div { background-image: linear-gradient(to right, #4B0082, #FFD700); }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("🔮 AuraLens Pro Max AI")
-st.caption("Advanced Biometric Analysis - By Namikor")
+st.caption("Advanced Biometric Analysis - Infographic Edition by Namikor")
 
-# --- 2. DATABASE MASTER (UPGRADED) ---
+# --- 2. DATABASE MASTER (INFOGRAFIS STYLE) ---
+# Menyesuaikan data agar cocok dengan format infografis yang diminta
 AURA_DB = {
-    "Merah": {"hex": "#FF0000", "hawkins": 150, "state": "Action", "tantangan": "Cenderung impulsif dan mudah marah jika keinginan tidak segera terpenuhi.", "solusi": "Salurkan energimu ke olahraga atau karya kreatif. Ingat, kesabaran adalah kekuatan yang tenang."},
-    "Jingga": {"hex": "#FF7F00", "hawkins": 200, "state": "Courage", "tantangan": "Sering merasa cemas berlebihan tentang penilaian orang lain.", "solusi": "Fokuslah pada proses berkarya, bukan hasil akhir. Duniamu indah meski tidak semua orang melihatnya."},
-    "Kuning": {"hex": "#FFFF00", "hawkins": 310, "state": "Willingness", "tantangan": "Terlalu banyak berpikir (overthinking) hingga sering lupa untuk mulai beraksi.", "solusi": "Ilmu tanpa amal itu hampa. Mulailah satu langkah kecil hari ini, jangan tunggu sampai sempurna."},
-    "Hijau": {"hex": "#00FF00", "hawkins": 400, "state": "Reason", "tantangan": "Sering mendahulukan kepentingan orang lain hingga mengabaikan diri sendiri.", "solusi": "Kamu tidak bisa menuang air dari gelas yang kosong. Cintai dirimu sendiri sebelum menyembuhkan dunia."},
-    "Biru": {"hex": "#0000FF", "hawkins": 500, "state": "Love", "tantangan": "Kadang sulit mengungkapkan perasaan jujur karena takut memicu konflik.", "solusi": "Suaramu berharga. Berbicara jujur dengan kasih sayang akan membuka pintu yang selama ini tertutup."},
-    "Nila": {"hex": "#4B0082", "hawkins": 540, "state": "Joy", "tantangan": "Merasa kesepian karena merasa tidak ada yang memahami visi besarmu.", "solusi": "Temukan komunitas yang sefrekuensi. Kamu tidak perlu berjalan sendirian untuk mencapai bintang."},
-    "Ungu": {"hex": "#800080", "hawkins": 600, "state": "Peace", "tantangan": "Bisa menjadi terlalu idealis dan merasa asing dengan realitas praktis.", "solusi": "Tetaplah membumi. Gunakan kebijaksanaanmu untuk membantu hal-hal nyata di sekitarmu."},
-    "Abu-Abu": {"hex": "#808080", "hawkins": 250, "state": "Neutrality", "tantangan": "Kurang semangat dan merasa hidup terasa datar atau membosankan.", "solusi": "Cobalah hal baru di luar zona nyamanmu. Sedikit percikan keberanian akan mewarnai harimu."},
-    "Marun": {"hex": "#800000", "hawkins": 175, "state": "Intensity", "tantangan": "Menyimpan tekanan batin yang kuat dan bersikap terlalu keras pada diri sendiri.", "solusi": "Maafkan kesalahan masa lalu. Kamu sedang berproses, dan itu sudah lebih dari cukup."},
-    "Hitam": {"hex": "#1A1A1A", "hawkins": 100, "state": "Protection", "tantangan": "Menutup diri terlalu rapat karena takut disakiti kembali oleh dunia luar.", "solusi": "Perisai melindungimu, tapi juga menghalangimu melihat cahaya. Beranilah terbuka pada hal-hal baik."}
+    "Merah": {"hex": "#FF0000", "state": "Action / Intensity", "stres": 88, "vibrasi": "85 Hz", "deskripsi": "Kamu adalah pemrakarsa yang penuh energi fisik. Cenderung keras pada diri sendiri dan menyukai tantangan langsung.", "tips": "Upgrade skill sabar, latihan meditasi, dan hidup balance.", "partner": "Jingga, Kuning"},
+    "Jingga": {"hex": "#FF7F00", "state": "Courage / Creativity", "stres": 75, "vibrasi": "72 Hz", "deskripsi": "Jiwa seni dan imajinasimu sangat kuat. Berani mengambil risiko, namun sering cemas penilaian orang.", "tips": "Upgrade skill komunikasi, portofolio kreatif, dan hidup balance.", "partner": "Merah, Kuning"},
+    "Kuning": {"hex": "#FFFF00", "state": "Willingness / Logic", "stres": 86, "vibrasi": "82 Hz", "deskripsi": "Pemikir logis dan problem solver sejati. Kamu suka tantangan logika dari kode yang rumit.", "tips": "Upgrade skill upgrade, manajemen waktu, dan hidup balance.", "partner": "Biru, Hijau"},
+    "Hijau": {"hex": "#00FF00", "state": "Reason / Harmony", "stres": 65, "vibrasi": "60 Hz", "deskripsi": "Penyembuh yang empati dan penyeimbang sekitar. Kehadiranmu menenangkan jiwa sekitar.", "tips": "Upgrade skill empati, time management, dan hidup balance.", "partner": "Kuning, Biru"},
+    "Biru": {"hex": "#0000FF", "state": "Love / Clarity", "stres": 70, "vibrasi": "68 Hz", "deskripsi": "Penyampai pesan tulus dan damai. Menyatukan hati melalui kata-kata jujur.", "tips": "Upgrade skill public speaking, networking, dan hidup balance.", "partner": "Kuning, Hijau"},
+    "Nila": {"hex": "#4B0082", "hawkins": 540, "state": "Joy / Vision", "stres": 82, "vibrasi": "78 Hz", "deskripsi": "Visioner intuitif yang melihat masa depan. Merasa kesepian karena visimu yang berbeda.", "tips": "Upgrade skill inovasi, kolaborasi tim, dan hidup balance.", "partner": "Ungu, Putih"},
+    "Ungu": {"hex": "#800080", "hawkins": 600, "state": "Peace / Wisdom", "stres": 60, "vibrasi": "55 Hz", "deskripsi": "Bijaksana, inovatif, dan spiritual. Menginspirasi transformasi global melalui cahaya.", "tips": "Upgrade skill leadership, mindfulness, dan hidup balance.", "partner": "Nila, Putih"}
 }
 
 # --- 3. INPUT DATA ---
-c1, c2 = st.columns([3, 1])
-with c1:
-    nama = st.text_input("1. Nama Lengkap:", placeholder="Masukkan nama kamu...")
-with c2:
-    umur = st.number_input("Umur:", min_value=7, max_value=60, value=9)
+nama = st.text_input("1. Nama Lengkap:", placeholder="Masukkan nama kamu...")
+umur = st.number_input("Umur:", min_value=7, max_value=60, value=9)
 
 if nama:
     st.divider()
     foto = st.camera_input("2. Ambil Foto Aura")
 
     if foto:
-        with st.status("🧬 Menganalisis Spektrum Energi...", expanded=False) as status:
-            time.sleep(2)
-            img = Image.open(foto)
-            img = ImageOps.exif_transpose(img)
-            stat = ImageStat.Stat(img)
-            brightness = sum(stat.mean) / 3 
+        img = Image.open(foto)
+        img = ImageOps.exif_transpose(img)
+        stat = ImageStat.Stat(img)
+        brightness = sum(stat.mean) / 3 
+        
+        warna_keys = list(AURA_DB.keys())
+        warna_hasil = warna_keys[int(brightness % len(warna_keys))]
+        res = AURA_DB[warna_hasil]
+
+        st.success(f"Analisis Selesai! Aura Dominan: {warna_hasil}")
+        
+        # --- 4. TAMPILAN INFOGRAFIS DI LAYAR (HTML/CSS) ---
+        # Ini dibuat agar mirip dengan gambar yang dikirim Mbak Ayi
+        
+        warna_hex = res["hex"]
+        
+        infografis_html = f"""
+        <div class="info-container">
+            <div class="info-header">NAMIKOR AURA BLUEPRINT</div>
             
-            warna_keys = list(AURA_DB.keys())
-            warna_hasil = warna_keys[int(brightness % len(warna_keys))]
-            res = AURA_DB[warna_hasil]
-            status.update(label=f"Aura {warna_hasil} Teridentifikasi!", state="complete")
+            <div class="info-section" style="border-left-color: {warna_hex};">
+                <div class="stat-label">Energi Kamu Match di Bidang</div>
+                <div class="info-header" style="color: {warna_hex}; font-size: 32px; text-align: left; margin: 0;">{warna_hasil.upper()}</div>
+                <p style="color: #A3B3C1; font-size: 14px; margin-top: 10px;">{res['deskripsi']}</p>
+            </div>
+            
+            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <div class="info-section" style="flex: 1; border-left-color: #FFD700; margin-bottom: 0;">
+                    <div class="stat-label">Tingkat Stres</div>
+                    <div class="stat-value" style="color: #FFD700; font-size: 36px;">{res['stres']}%</div>
+                </div>
+                <div class="info-section" style="flex: 1; border-left-color: #00FFFF; margin-bottom: 0;">
+                    <div class="stat-label">Frekuensi Vibrasi</div>
+                    <div class="stat-value" style="color: #00FFFF;">{res['vibrasi']}</div>
+                </div>
+            </div>
+            
+            <div class="info-section" style="border-left-color: #FFD700;">
+                <div class="stat-label">Tips Sukses (Namikor)</div>
+                <p style="color: white; font-size: 14px; font-weight: bold; margin: 5px 0;">{res['tips']}</p>
+            </div>
+            
+            <div class="info-section" style="border-left-color: {warna_hex};">
+                <div class="stat-label">Partner yang Cocok</div>
+                <div class="stat-value">{res['partner']}</div>
+            </div>
 
-        # Visualisasi Aura
-        c_rgb = tuple(int(res["hex"].lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
-        glow = Image.new("RGB", img.size, c_rgb)
-        visual = Image.blend(img, glow, alpha=0.3)
-        
-        st.subheader(f"Hasil Analisis: Aura {warna_hasil}")
-        st.image(visual, use_container_width=True)
-        
-        st.markdown(f'<div class="hawkins-box">{res["hawkins"]} Log | Status: {res["state"]}</div>', unsafe_allow_html=True)
-        st.markdown('<div class="spectrum-bar"></div>', unsafe_allow_html=True)
-
-        # Deskripsi Tantangan & Motivasi
-        st.markdown(f"""
-        <div class="warning-card">
-        <h4 style='margin:0;'>⚠️ Tantangan</h4>
-        {res['tantangan']}
+            <div style="text-align: center; color: #555; font-size: 10px; margin-top: 20px;">
+                © 2026 Namikor. All Rights Reserved. ID: {nama[:3].upper()}-{umur}-{warna_hasil[:2].upper()}
+            </div>
         </div>
-        <div class="motivation-card">
-        <h4 style='margin:0;'>✨ Rekomendasi Namikor</h4>
-        {res['solusi']}
-        </div>
-        """, unsafe_allow_html=True)
-
-        # --- 4. DOWNLOAD PDF ---
-        st.divider()
-        visual.save("temp_aura.jpg")
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_fill_color(14, 17, 23)
-        pdf.rect(0, 0, 210, 297, 'F')
+        """
+        st.markdown(infografis_html, unsafe_allow_html=True)
         
-        pdf.set_text_color(255, 215, 0)
-        pdf.set_font("Arial", 'B', 20)
-        pdf.cell(0, 20, "NAMIKOR AURA LENS REPORT", ln=True, align='C')
-        
-        pdf.image("temp_aura.jpg", x=55, y=40, w=100)
-        pdf.ln(110)
-        
-        pdf.set_text_color(255, 255, 255)
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, f"Nama: {nama} | Aura: {warna_hasil}", ln=True)
-        pdf.ln(5)
-        
-        pdf.set_font("Arial", 'B', 12)
-        pdf.set_text_color(255, 100, 100)
-        pdf.cell(0, 10, "TANTANGAN:", ln=True)
-        pdf.set_font("Arial", '', 11)
-        pdf.set_text_color(255, 255, 255)
-        pdf.multi_cell(0, 7, res['tantangan'])
-        
-        pdf.ln(5)
-        pdf.set_font("Arial", 'B', 12)
-        pdf.set_text_color(100, 255, 100)
-        pdf.cell(0, 10, "SARAN MOTIVASI:", ln=True)
-        pdf.set_font("Arial", '', 11)
-        pdf.set_text_color(255, 255, 255)
-        pdf.multi_cell(0, 7, res['solusi'])
-        
-        pdf.ln(10)
-        pdf.set_font("Arial", 'I', 10)
-        pdf.set_text_color(150, 150, 150)
-        pdf.cell(0, 10, "© 2026 Namikor. All Rights Reserved.", ln=True, align='C')
-        
-        pdf_bytes = pdf.output(dest='S')
-        if isinstance(pdf_bytes, str):
-            pdf_bytes = pdf_bytes.encode('latin-1')
-
-        st.download_button(
-            label="📥 DOWNLOAD LAPORAN PDF (NAMIKOR)",
-            data=pdf_bytes,
-            file_name=f"Aura_Namikor_{nama}.pdf",
-            mime="application/pdf"
-        )
+        st.info("💡 Tips: Screenshot tampilan di atas untuk menyimpan infografis Aura Namikor kamu!")
 
     st.caption("© 2026 Namikor. All Rights Reserved.")
 else:
-    st.info("Sistem Standby. Silahkan masukkan nama untuk memulai analisis.")
+    st.info("Sistem Standby. Silahkan masukkan nama untuk memulai.")
