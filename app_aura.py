@@ -114,6 +114,6 @@ if nama:
             href = f'<a href="data:application/pdf;base64,{b64}" download="Report_{nama}.pdf" style="color:white; text-decoration:none; background:#4B0082; padding:15px; border-radius:10px; display:block; text-align:center; border: 1px solid #FFD700;">KLIK DI SINI UNTUK DOWNLOAD PDF</a>'
             st.markdown(href, unsafe_allow_html=True)
 
-    st.markdown(f'<div class="copyright">© 2026 <b>Hikari Salsabila Syauqi</b>. All Rights Reserved.</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="copyright">© 2026 <b>Namikor</b>. All Rights Reserved.</div>', unsafe_allow_html=True)
 else:
     st.info("Sistem Standby. Silahkan masukkan nama dan umur untuk memulai.")
