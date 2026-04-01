@@ -1,8 +1,7 @@
 import streamlit as st
 from PIL import Image, ImageOps, ImageStat
-import time
 from fpdf import FPDF
-import io
+import time
 
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="AuraLens Pro Max AI", page_icon="🔮", layout="centered")
@@ -70,18 +69,15 @@ if nama:
         st.markdown(f'<div class="warning-card">⚠️ <b>TANTANGAN:</b> {res["tantangan"]}</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="motivation-card">✨ <b>REKOMENDASI:</b> {res["solusi"]}</div>', unsafe_allow_html=True)
 
-        # --- PERBAIKAN LOGIKA PDF ---
+        # --- PERBAIKAN DOWNLOAD PDF ---
         st.divider()
         
-        # Simpan gambar ke file sementara
-        temp_image_path = "temp_aura.jpg"
-        visual.save(temp_image_path)
+        # 1. Simpan foto sementara
+        visual.save("temp_aura.jpg")
         
-        # Buat PDF
+        # 2. Buat PDF dengan fpdf
         pdf = FPDF()
         pdf.add_page()
-        
-        # Desain PDF Namikor
         pdf.set_fill_color(14, 17, 23)
         pdf.rect(0, 0, 210, 297, 'F')
         
@@ -89,35 +85,36 @@ if nama:
         pdf.set_font("Arial", 'B', 20)
         pdf.cell(0, 20, "NAMIKOR AURA LENS REPORT", ln=True, align='C')
         
-        pdf.image(temp_image_path, x=55, y=40, w=100)
+        pdf.image("temp_aura.jpg", x=55, y=45, w=100)
         pdf.ln(110)
         
         pdf.set_text_color(255, 255, 255)
         pdf.set_font("Arial", 'B', 14)
         pdf.cell(0, 10, f"Nama: {nama}", ln=True)
-        pdf.cell(0, 10, f"Warna Aura Dominan: {warna_hasil}", ln=True)
-        pdf.cell(0, 10, f"Status Energi: {res['state']}", ln=True)
+        pdf.cell(0, 10, f"Warna Aura: {warna_hasil}", ln=True)
         
         pdf.ln(5)
-        pdf.set_font("Arial", 'I', 12)
-        pdf.multi_cell(0, 8, f"Saran dari Namikor: {res['solusi']}")
+        pdf.set_font("Arial", '', 12)
+        pdf.multi_cell(0, 8, f"Pesan Namikor: {res['solusi']}")
         
         pdf.ln(15)
-        pdf.set_font("Arial", '', 10)
+        pdf.set_font("Arial", 'I', 10)
         pdf.set_text_color(150, 150, 150)
         pdf.cell(0, 10, "© 2026 Namikor. All Rights Reserved.", ln=True, align='C')
         
-        # Output PDF sebagai Bytes
-        pdf_output = pdf.output(dest='S')
-        
-        # Tombol Download Resmi
+        # 3. Bagian Paling Penting: Cara output PDF yang benar
+        pdf_data = pdf.output(dest='S')
+        # Jika pdf_data berupa string (di beberapa versi fpdf), kita ubah ke bytes
+        if isinstance(pdf_data, str):
+            pdf_data = pdf_data.encode('latin-1')
+
         st.download_button(
             label="📥 DOWNLOAD & LIHAT LAPORAN PDF",
-            data=bytes(pdf_output), # Pastikan dalam format bytes murni
+            data=pdf_data,
             file_name=f"Aura_Namikor_{nama}.pdf",
             mime="application/pdf"
         )
 
     st.caption("© 2026 Namikor. All Rights Reserved.")
 else:
-    st.info("Sistem Standby. Silahkan masukkan nama untuk memulai analisis.")
+    st.info("Sistem Standby. Silahkan masukkan nama untuk memulai.")
