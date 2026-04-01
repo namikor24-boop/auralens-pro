@@ -1,40 +1,73 @@
-import streamlit as st
-from PIL import Image, ImageOps, ImageStat
-import time
-import base64
-from fpdf import FPDF
-
-# --- 1. KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="AuraLens Pro Max AI", page_icon="🔮", layout="centered")
-
-st.markdown("""
-    <style>
-    .main { background-color: #0E1117; color: white; }
-    div.stButton > button:first-child { 
-        width: 100%; background-color: #4B0082; color: white; 
-        border-radius: 12px; font-weight: bold; border: 2px solid #FFD700;
-    }
-    .hawkins-box {
-        font-size: 24px; font-weight: bold; text-align: center; color: #FFFFFF;
-        background: linear-gradient(45deg, #4B0082, #000000);
-        border-radius: 15px; padding: 20px; border: 2px solid #FFD700; margin: 15px 0px;
-    }
-    .blueprint-card { background-color: #1E1E1E; padding: 20px; border-radius: 15px; border-left: 6px solid #FFD700; margin-top: 20px; }
-    .career-card { background-color: #16213E; padding: 15px; border-radius: 10px; border-left: 6px solid #00D1FF; margin-top: 10px; }
-    .learning-card { background-color: #1B262C; padding: 15px; border-radius: 10px; border-left: 6px solid #A2FF00; margin-top: 10px; }
-    .warning-card { background-color: #2D1B1B; padding: 15px; border-radius: 10px; border-left: 6px solid #FF4B4B; margin-top: 10px; color: #FFCDCD; }
-    .motivation-card { background-color: #1B2D1B; padding: 15px; border-radius: 10px; border-left: 6px solid #4BFF4B; margin-top: 10px; color: #CDFFCD; }
-    </style>
-    """, unsafe_allow_html=True)
-
-st.title("🔮 AuraLens Pro Max AI")
-st.caption("Advanced Biometric Life Blueprint Analysis - Version 4.0")
-
-# --- DATABASE MASTER ---
+# --- DATABASE MASTER (VERSI PERBAIKAN) ---
 AURA_DB = {
     "Merah": {
-        "hex": "#FF0000", "hawkins": 150, "state": "Action",
-        "tantangan": "Cenderung impulsif dan mudah marah.",
-        "solusi": "Salurkan energimu ke olahraga atau karya kreatif.",
-        "karir": "CEO, Atlet Profesional, Komandan Militer, Entrepreneur.",
-        "belajar": "Public Speaking, Manajemen
+        "hex": "#FF0000", 
+        "hawkins": 150, 
+        "state": "Action", 
+        "tantangan": "Cenderung impulsif dan mudah marah jika keinginan tidak terpenuhi.", 
+        "solusi": "Salurkan energimu ke olahraga atau karya kreatif. Ingat, kesabaran adalah kekuatan yang tenang."
+    },
+    "Jingga": {
+        "hex": "#FF7F00", 
+        "hawkins": 200, 
+        "state": "Courage", 
+        "tantangan": "Sering merasa cemas berlebihan tentang penilaian orang lain.", 
+        "solusi": "Fokuslah pada proses berkarya. Duniamu tetap indah meski tidak semua orang melihatnya."
+    },
+    "Kuning": {
+        "hex": "#FFFF00", 
+        "hawkins": 310, 
+        "state": "Willingness", 
+        "tantangan": "Terlalu banyak berpikir (overthinking) hingga lupa beraksi.", 
+        "solusi": "Ilmu tanpa amal itu hampa. Mulailah satu langkah kecil hari ini, jangan tunggu sempurna."
+    },
+    "Hijau": {
+        "hex": "#00FF00", 
+        "hawkins": 400, 
+        "state": "Reason", 
+        "tantangan": "Sering mendahulukan orang lain hingga mengabaikan diri sendiri.", 
+        "solusi": "Cintai dirimu sendiri sebelum menyembuhkan dunia. Kamu berhak untuk bahagia."
+    },
+    "Biru": {
+        "hex": "#0000FF", 
+        "hawkins": 500, 
+        "state": "Love", 
+        "tantangan": "Kadang sulit mengungkapkan perasaan jujur karena takut konflik.", 
+        "solusi": "Suaramu berharga. Berbicara jujur dengan kasih sayang akan membuka pintu kesuksesan."
+    },
+    "Nila": {
+        "hex": "#4B0082", 
+        "hawkins": 540, 
+        "state": "Joy", 
+        "tantangan": "Merasa kesepian karena merasa tidak ada yang memahami visi besarmu.", 
+        "solusi": "Temukan teman yang sefrekuensi. Kamu tidak perlu berjalan sendirian untuk mencapai bintang."
+    },
+    "Ungu": {
+        "hex": "#800080", 
+        "hawkins": 600, 
+        "state": "Peace", 
+        "tantangan": "Bisa menjadi terlalu idealis dan jauh dari realita praktis.", 
+        "solusi": "Tetaplah membumi. Gunakan kebijaksanaanmu untuk membantu hal-hal nyata di sekitarmu."
+    },
+    "Abu-Abu": {
+        "hex": "#808080", 
+        "hawkins": 250, 
+        "state": "Neutrality", 
+        "tantangan": "Kurang semangat dan merasa hidup terasa datar atau membosankan.", 
+        "solusi": "Cobalah hal baru di luar zona nyamanmu. Sedikit keberanian akan mewarnai harimu."
+    },
+    "Marun": {
+        "hex": "#800000", 
+        "hawkins": 175, 
+        "state": "Intensity", 
+        "tantangan": "Menyimpan tekanan batin yang kuat dan keras pada diri sendiri.", 
+        "solusi": "Maafkan kesalahan masa lalu. Kamu sedang berproses, dan itu sudah lebih dari cukup."
+    },
+    "Hitam": {
+        "hex": "#1A1A1A", 
+        "hawkins": 100, 
+        "state": "Protection", 
+        "tantangan": "Menutup diri terlalu rapat karena takut disakiti kembali.", 
+        "solusi": "Perisai melindungimu, tapi juga menghalangi cahaya. Beranilah terbuka pada hal-hal baik."
+    }
+}
